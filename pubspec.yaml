@@ -1,12 +1,13 @@
 name: laporpak_fp
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0+1
 
 environment:
   sdk: ^3.11.1
 
 dependencies:
+  animations: ^2.0.11
   cloud_firestore: ^6.5.0
   firebase_core: ^4.10.0
   firebase_auth: ^6.5.2

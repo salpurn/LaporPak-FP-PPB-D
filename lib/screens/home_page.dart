@@ -1,29 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../services/auth_service.dart';
+import 'package:laporpak_fp/core/models/app_user.dart';
+import 'package:laporpak_fp/core/widgets/app_shell.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class RoleHomePage extends StatelessWidget {
+  final AppUser user;
+
+  const RoleHomePage({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              await AuthService().signOut();
-            },
-            icon: const Icon(Icons.logout),
-          )
-        ],
-      ),
-      body: Center(
-        child: Text('Signed in as ${user?.email ?? 'unknown'}'),
-      ),
-    );
+    return AppShell(user: user);
   }
 }

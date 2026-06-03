@@ -1,27 +1,7 @@
-enum UserRole {
-  floorWorker,
-  supervisor,
-  maintenance,
-}
+enum UserRole { floorWorker, supervisor, maintenance }
 
-enum TicketStatus {
-  open,
-  assigned,
-  pendingValidation,
-  closed,
-  rejected,
-}
+enum TicketStatus { open, assigned, pendingValidation, closed, rejected }
 
-enum HazardCategory {
-  electrical,
-  chemical,
-  structural,
-  janitorial,
-}
+enum HazardCategory { electrical, chemical, structural, janitorial }
 
-enum UrgencyLevel {
-  low,
-  medium,
-  high,
-  critical,
-}
+enum UrgencyLevel { low, medium, high, critical }
