@@ -29,9 +29,7 @@ class AuthService {
 
   Future<AppUser?> fetchCurrentUser() async {
     final current = _auth.currentUser;
-    if (current == null) {
-      return null;
-    }
+    if (current == null) return null;
 
     final doc = await _firestore
         .collection(Collections.users)
@@ -42,7 +40,14 @@ class AuthService {
       final data = doc.data() ?? <String, dynamic>{};
       final roleValue = data['role'];
       if (roleValue is String && roleValue.isNotEmpty) {
-        return AppUser.fromJson(<String, dynamic>{...data, 'uid': current.uid});
+        return AppUser.fromJson(<String, dynamic>{
+          ...data,
+          'uid': current.uid,
+          'name': data['name'] ?? current.displayName ?? 'User',
+          'email': data['email'] ?? current.email ?? '',
+          'department': data['department'] ?? '',
+          'fcmToken': data['fcmToken'] ?? '',
+        });
       }
     }
 

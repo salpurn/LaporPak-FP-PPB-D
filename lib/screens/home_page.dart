@@ -1,14 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
-import 'package:laporpak_fp/core/widgets/app_shell.dart';
+import '../services/auth_service.dart';
 
-class RoleHomePage extends StatelessWidget {
+class HomePage extends StatelessWidget {
   final AppUser user;
 
-  const RoleHomePage({super.key, required this.user});
+  const HomePage({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
-    return AppShell(user: user);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${user.role.name} Dashboard'),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await AuthService().signOut();
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(context, '/login');
+              }
+            },
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Welcome, ${user.name}', style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 8),
+            Text('Role: ${user.role.name}'),
+            Text('Department: ${user.department}'),
+          ],
+        ),
+      ),
+    );
   }
 }

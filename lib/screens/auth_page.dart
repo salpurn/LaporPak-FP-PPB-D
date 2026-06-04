@@ -1,7 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../core/constants/enums.dart';
 import '../services/auth_service.dart';
 
 class AuthPage extends StatefulWidget {
@@ -15,21 +13,9 @@ class _AuthPageState extends State<AuthPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _service = AuthService();
-  StreamSubscription<User?>? _authSubscription;
   bool _isRegister = false;
   bool _loading = false;
   String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _authSubscription = _service.authStateChanges().listen((user) {
-      if (user == null || !mounted) {
-        return;
-      }
-      Navigator.pushReplacementNamed(context, '/home');
-    });
-  }
 
   Future<void> _submit() async {
     setState(() {
@@ -39,16 +25,26 @@ class _AuthPageState extends State<AuthPage> {
 
     try {
       if (_isRegister) {
-        await _service.register(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        );
+        await _service.register(_emailController.text.trim(), _passwordController.text.trim());
       } else {
-        await _service.signIn(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        );
+        await _service.signIn(_emailController.text.trim(), _passwordController.text.trim());
       }
+
+      if (!mounted) return;
+
+      final currentUser = await _service.fetchCurrentUser();
+
+      if (!mounted) return;
+
+      final routeName = _routeForRole(currentUser?.role);
+      if (routeName == null) {
+        setState(() {
+          _error = 'Role user tidak dikenali atau data profile belum lengkap.';
+        });
+        return;
+      }
+
+      Navigator.pushReplacementNamed(context, routeName);
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -62,9 +58,21 @@ class _AuthPageState extends State<AuthPage> {
     }
   }
 
+  String? _routeForRole(UserRole? role) {
+    switch (role) {
+      case UserRole.floorWorker:
+        return '/worker-dashboard';
+      case UserRole.supervisor:
+        return '/supervisor-dashboard';
+      case UserRole.maintenance:
+        return '/maintenance-dashboard';
+      case null:
+        return null;
+    }
+  }
+
   @override
   void dispose() {
-    _authSubscription?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -102,10 +110,7 @@ class _AuthPageState extends State<AuthPage> {
                     ? const SizedBox(
                         height: 16,
                         width: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : Text(_isRegister ? 'Create account' : 'Sign in'),
               ),
@@ -120,9 +125,7 @@ class _AuthPageState extends State<AuthPage> {
                       });
                     },
               child: Text(
-                _isRegister
-                    ? 'Have an account? Sign in'
-                    : 'No account? Register',
+                _isRegister ? 'Have an account? Sign in' : 'No account? Register',
               ),
             ),
           ],
