@@ -1,7 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:laporpak_fp/core/constants/collections.dart';
+import 'package:laporpak_fp/core/constants/enums.dart';
+import 'package:laporpak_fp/core/models/app_user.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<UserCredential> signIn(String email, String password) {
     return _auth.signInWithEmailAndPassword(email: email, password: password);
@@ -14,8 +19,6 @@ class AuthService {
   Future<void> signOut() {
     return _auth.signOut();
   }
-<<<<<<< Updated upstream
-=======
 
   Stream<User?> authStateChanges() {
     return _auth.authStateChanges();
@@ -23,9 +26,7 @@ class AuthService {
 
   Future<AppUser?> fetchCurrentUser() async {
     final current = _auth.currentUser;
-    if (current == null) {
-      return null;
-    }
+    if (current == null) return null;
 
     final doc = await _firestore
         .collection(Collections.users)
@@ -60,5 +61,4 @@ class AuthService {
       fcmToken: '',
     );
   }
->>>>>>> Stashed changes
 }

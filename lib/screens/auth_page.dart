@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../core/constants/enums.dart';
 import '../services/auth_service.dart';
-import 'package:laporpak_fp/core/constants/enums.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -30,10 +30,11 @@ class _AuthPageState extends State<AuthPage> {
         await _service.signIn(_emailController.text.trim(), _passwordController.text.trim());
       }
 
+      if (!mounted) return;
+
       final currentUser = await _service.fetchCurrentUser();
-      if (!mounted) {
-        return;
-      }
+
+      if (!mounted) return;
 
       final routeName = _routeForRole(currentUser?.role);
       if (routeName == null) {
@@ -57,13 +58,6 @@ class _AuthPageState extends State<AuthPage> {
     }
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
   String? _routeForRole(UserRole? role) {
     switch (role) {
       case UserRole.floorWorker:
@@ -75,6 +69,13 @@ class _AuthPageState extends State<AuthPage> {
       case null:
         return null;
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
