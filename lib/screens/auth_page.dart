@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'package:laporpak_fp/core/constants/enums.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -28,6 +29,21 @@ class _AuthPageState extends State<AuthPage> {
       } else {
         await _service.signIn(_emailController.text.trim(), _passwordController.text.trim());
       }
+
+      final currentUser = await _service.fetchCurrentUser();
+      if (!mounted) {
+        return;
+      }
+
+      final routeName = _routeForRole(currentUser?.role);
+      if (routeName == null) {
+        setState(() {
+          _error = 'Role user tidak dikenali atau data profile belum lengkap.';
+        });
+        return;
+      }
+
+      Navigator.pushReplacementNamed(context, routeName);
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -46,6 +62,19 @@ class _AuthPageState extends State<AuthPage> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  String? _routeForRole(UserRole? role) {
+    switch (role) {
+      case UserRole.floorWorker:
+        return '/worker-dashboard';
+      case UserRole.supervisor:
+        return '/supervisor-dashboard';
+      case UserRole.maintenance:
+        return '/maintenance-dashboard';
+      case null:
+        return null;
+    }
   }
 
   @override
