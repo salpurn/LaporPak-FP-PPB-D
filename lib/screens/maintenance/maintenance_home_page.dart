@@ -103,11 +103,9 @@ class MaintenanceHomePage extends StatelessWidget {
     final aOverdue = a.deadline != null && a.deadline!.isBefore(now);
     final bOverdue = b.deadline != null && b.deadline!.isBefore(now);
 
-    // Overdue first
     if (aOverdue && !bOverdue) return -1;
     if (!aOverdue && bOverdue) return 1;
 
-    // Then by urgency (critical → high → medium → low)
     final urgencyOrder = {
       UrgencyLevel.critical: 0,
       UrgencyLevel.high: 1,

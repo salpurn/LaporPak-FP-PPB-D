@@ -1,5 +1,5 @@
-import 'package:laporpak_fp/core/services/fake/fake_storage_service.dart';
-import 'package:laporpak_fp/core/services/fake/fake_ticket_repository.dart';
+import 'package:laporpak_fp/core/services/firestore/firebase_storage_service.dart';
+import 'package:laporpak_fp/core/services/firestore/firestore_ticket_repository.dart';
 import 'package:laporpak_fp/core/services/storage_service.dart';
 import 'package:laporpak_fp/core/services/ticket_repository.dart';
 
@@ -8,6 +8,6 @@ class MaintenanceServices {
 
   static final MaintenanceServices instance = MaintenanceServices._();
 
-  final TicketRepository repo = FakeTicketRepository();
-  final StorageService storage = FakeStorageService();
+  final TicketRepository repo = FirestoreTicketRepository();
+  final StorageService storage = FirebaseStorageService();
 }

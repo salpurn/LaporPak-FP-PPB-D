@@ -18,13 +18,21 @@ class AppUser {
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
+    final roleRaw = json['role'] as String? ?? '';
+    UserRole role;
+    try {
+      role = UserRole.values.byName(roleRaw);
+    } catch (_) {
+      role = UserRole.floorWorker;
+    }
+
     return AppUser(
-      uid: json['uid'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      role: UserRole.values.byName(json['role'] as String),
-      department: json['department'] as String,
-      fcmToken: json['fcmToken'] as String,
+      uid: json['uid'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      role: role,
+      department: json['department'] as String? ?? '',
+      fcmToken: json['fcmToken'] as String? ?? '',
     );
   }
 
