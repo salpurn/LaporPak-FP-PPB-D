@@ -31,7 +31,7 @@ class StatusBadge extends StatelessWidget {
         return const Color(0xFF607D8B);
       case TicketStatus.assigned:
         return const Color(0xFF1976D2);
-      case TicketStatus.pending:
+      case TicketStatus.pendingValidation:
         return const Color(0xFFF57C00);
       case TicketStatus.closed:
         return const Color(0xFF388E3C);
@@ -46,7 +46,7 @@ class StatusBadge extends StatelessWidget {
         return 'Open';
       case TicketStatus.assigned:
         return 'Assigned';
-      case TicketStatus.pending:
+      case TicketStatus.pendingValidation:
         return 'Pending Validation';
       case TicketStatus.closed:
         return 'Closed';

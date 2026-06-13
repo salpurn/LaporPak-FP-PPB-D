@@ -18,7 +18,7 @@ class WorkerHomePage extends StatelessWidget {
 
     return Scaffold(
       body: StreamBuilder<List<Ticket>>(
-        stream: repo.watchByWorker(user.uid),
+        stream: repo.watchByWorker(user.workerId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

@@ -54,7 +54,7 @@ class _SupervisorTicketDetailPageState extends State<SupervisorTicketDetailPage>
         return const Color(0xFF2196F3);
       case TicketStatus.assigned:
         return const Color(0xFF00BCD4);
-      case TicketStatus.pending:
+      case TicketStatus.pendingValidation:
         return const Color(0xFFFF9800);
       case TicketStatus.closed:
         return const Color(0xFF4CAF50);
@@ -69,8 +69,8 @@ class _SupervisorTicketDetailPageState extends State<SupervisorTicketDetailPage>
         return 'Open';
       case TicketStatus.assigned:
         return 'Assigned';
-      case TicketStatus.pending:
-        return 'Pending Validation';
+      case TicketStatus.pendingValidation:
+        return 'pendingValidation Validation';
       case TicketStatus.closed:
         return 'Closed';
       case TicketStatus.rejected:
@@ -382,7 +382,7 @@ class _SupervisorTicketDetailPageState extends State<SupervisorTicketDetailPage>
           ),
         ),
       );
-    } else if (status == TicketStatus.pending) {
+    } else if (status == TicketStatus.pendingValidation) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

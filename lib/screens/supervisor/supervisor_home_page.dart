@@ -34,7 +34,7 @@ class _SupervisorHomePageState extends State<SupervisorHomePage>
     'All': null,
     'Open': TicketStatus.open,
     'Assigned': TicketStatus.assigned,
-    'Pending': TicketStatus.pending,
+    'pendingValidation': TicketStatus.pendingValidation,
     'Closed': TicketStatus.closed,
     'Rejected': TicketStatus.rejected,
   };
@@ -131,235 +131,152 @@ class _SupervisorHomePageState extends State<SupervisorHomePage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Normalize department string for case-insensitive comparison
-    final supervisorDept = widget.user.department.trim().toLowerCase();
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('tickets')
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection('tickets').snapshots(),
       builder: (context, snapshot) {
-        // Loading
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // Error
         if (snapshot.hasError) {
           return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 12),
-                Text(
-                  'Failed to load tickets.\n${snapshot.error}',
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Failed to load tickets.\n${snapshot.error}',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           );
         }
 
-        // Parse documents — robust: skip bad docs instead of crashing the whole stream
         final docs = snapshot.data?.docs ?? [];
         final allTickets = <Ticket>[];
+
+        Map<String, dynamic> sanitize(Map<String, dynamic> m) {
+          return m.map((key, value) {
+            if (value is Timestamp) return MapEntry(key, value.toDate().toIso8601String());
+            if (value is Map<String, dynamic>) return MapEntry(key, sanitize(value));
+            return MapEntry(key, value);
+          });
+        }
 
         for (final doc in docs) {
           try {
             final data = doc.data() as Map<String, dynamic>;
-
-            // ── Case-insensitive department filter (client-side) ──
-            final ticketDept =
-                (data['department'] as String? ?? '').trim().toLowerCase();
-            if (ticketDept != supervisorDept) continue;
-
-            // Recursively converts any Firestore Timestamp → ISO 8601 String
-            // so that fromJson() (which uses DateTime.parse) never receives a Timestamp
-            Map<String, dynamic> sanitize(Map<String, dynamic> m) {
-              return m.map((key, value) {
-                if (value is Timestamp) {
-                  return MapEntry(key, value.toDate().toIso8601String());
-                } else if (value is Map<String, dynamic>) {
-                  return MapEntry(key, sanitize(value));
-                }
-                return MapEntry(key, value);
-              });
-            }
-
-            final clean = sanitize({...data, 'id': doc.id});
-            allTickets.add(Ticket.fromJson(clean));
+            allTickets.add(Ticket.fromJson(sanitize({...data, 'id': doc.id})));
           } catch (e) {
-            // Log the bad document and continue — do not crash the whole list
-            debugPrint('[SupervisorDashboard] Skipped doc ${doc.id}: $e');
+            debugPrint('[Supervisor] Skipped ${doc.id}: $e');
           }
         }
-
 
         final counts = _statusCounts(allTickets);
         final displayTickets = _sorted(_filtered(allTickets));
 
-        return NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            // ── Summary stats header ─────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Container(
-                color: theme.colorScheme.primary,
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.user.department,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${allTickets.length} Total Ticket${allTickets.length != 1 ? 's' : ''}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Summary chip row
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _SummaryChip(
-                            label: 'Open',
-                            count: counts[TicketStatus.open] ?? 0,
-                            color: const Color(0xFF2196F3),
-                          ),
-                          const SizedBox(width: 8),
-                          _SummaryChip(
-                            label: 'Assigned',
-                            count: counts[TicketStatus.assigned] ?? 0,
-                            color: const Color(0xFF00BCD4),
-                          ),
-                          const SizedBox(width: 8),
-                          _SummaryChip(
-                            label: 'Pending',
-                            count: counts[TicketStatus.pending] ?? 0,
-                            color: const Color(0xFFFF9800),
-                          ),
-                          const SizedBox(width: 8),
-                          _SummaryChip(
-                            label: 'Closed',
-                            count: counts[TicketStatus.closed] ?? 0,
-                            color: const Color(0xFF4CAF50),
-                          ),
-                          const SizedBox(width: 8),
-                          _SummaryChip(
-                            label: 'Rejected',
-                            count: counts[TicketStatus.rejected] ?? 0,
-                            color: const Color(0xFFF44336),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── Sort bar ────────────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    const Icon(Icons.sort, size: 18, color: Colors.grey),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'Sort by:',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<_SortOption>(
-                          value: _sortOption,
-                          isDense: true,
-                          icon: const Icon(
-                            Icons.keyboard_arrow_down,
-                            size: 18,
-                          ),
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          items: _SortOption.values
-                              .map(
-                                (o) => DropdownMenuItem(
-                                  value: o,
-                                  child: Text(_sortLabel(o)),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (v) {
-                            if (v != null) setState(() => _sortOption = v);
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── Tab bar ─────────────────────────────────────────────────────
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _StickyTabBarDelegate(
-                TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  labelColor: theme.colorScheme.primary,
-                  unselectedLabelColor: Colors.grey,
-                  indicatorColor: theme.colorScheme.primary,
-                  labelStyle: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
+        return Column(
+          children: [
+            // ── Summary header ───────────────────────────────────────────────
+            Container(
+              color: theme.colorScheme.primary,
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.user.department,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
                   ),
-                  tabs: _tabs.keys
-                      .map((label) => Tab(text: label))
-                      .toList(),
-                ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${allTickets.length} Total Ticket${allTickets.length != 1 ? 's' : ''}',
+                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 12),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _SummaryChip(label: 'Open', count: counts[TicketStatus.open] ?? 0, color: const Color(0xFF2196F3)),
+                        const SizedBox(width: 8),
+                        _SummaryChip(label: 'Assigned', count: counts[TicketStatus.assigned] ?? 0, color: const Color(0xFF00BCD4)),
+                        const SizedBox(width: 8),
+                        _SummaryChip(label: 'Pending Validation', count: counts[TicketStatus.pendingValidation] ?? 0, color: const Color(0xFFFF9800)),
+                        const SizedBox(width: 8),
+                        _SummaryChip(label: 'Closed', count: counts[TicketStatus.closed] ?? 0, color: const Color(0xFF4CAF50)),
+                        const SizedBox(width: 8),
+                        _SummaryChip(label: 'Rejected',count: counts[TicketStatus.rejected] ?? 0, color: const Color(0xFFF44336)),
+                      ], 
+                    ),
+                  ),
+                ],
               ),
+            ),
+
+            // ── Sort bar ─────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.sort, size: 18, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  const Text('Sort by:', style: TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<_SortOption>(
+                        value: _sortOption,
+                        isDense: true,
+                        icon: const Icon(Icons.keyboard_arrow_down, size: 18),
+                        style: TextStyle(fontSize: 13, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                        items: _SortOption.values
+                            .map((o) => DropdownMenuItem(value: o, child: Text(_sortLabel(o))))
+                            .toList(),
+                        onChanged: (v) { if (v != null) setState(() => _sortOption = v); },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Tab bar ──────────────────────────────────────────────────────
+            TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              labelColor: theme.colorScheme.primary,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: theme.colorScheme.primary,
+              labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              tabs: _tabs.keys.map((label) => Tab(text: label)).toList(),
+            ),
+
+            // ── Ticket list ───────────────────────────────────────────────────
+            Expanded(
+              child: displayTickets.isEmpty
+                  ? _EmptyState(filterStatus: _filterStatus)
+                  : ListView.builder(
+                      padding: const EdgeInsets.only(top: 8, bottom: 24),
+                      itemCount: displayTickets.length,
+                      itemBuilder: (context, index) {
+                        final ticket = displayTickets[index];
+                        return SupervisorTicketCard(
+                          ticket: ticket,
+                          onTap: () => _openDetail(ticket),
+                        );
+                      },
+                    ),
             ),
           ],
-
-          // ── Ticket list body ───────────────────────────────────────────────
-          body: displayTickets.isEmpty
-              ? _EmptyState(
-                  filterStatus: _filterStatus,
-                  department: widget.user.department,
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.only(top: 8, bottom: 24),
-                  itemCount: displayTickets.length,
-                  itemBuilder: (context, index) {
-                    final ticket = displayTickets[index];
-                    return SupervisorTicketCard(
-                      ticket: ticket,
-                      onTap: () => _openDetail(ticket),
-                    );
-                  },
-                ),
         );
       },
     );
@@ -420,14 +337,13 @@ class _SummaryChip extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 class _EmptyState extends StatelessWidget {
   final TicketStatus? filterStatus;
-  final String department;
 
-  const _EmptyState({required this.filterStatus, required this.department});
+  const _EmptyState({required this.filterStatus});
 
   @override
   Widget build(BuildContext context) {
     final message = filterStatus == null
-        ? 'No tickets in $department department yet.'
+        ? 'No tickets yet.'
         : 'No ${filterStatus!.name} tickets found.';
 
     return Center(
@@ -435,9 +351,7 @@ class _EmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            filterStatus == null
-                ? Icons.inbox_outlined
-                : Icons.filter_list_off,
+            filterStatus == null ? Icons.inbox_outlined : Icons.filter_list_off,
             size: 64,
             color: Colors.grey[300],
           ),
@@ -445,46 +359,10 @@ class _EmptyState extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey[500],
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontSize: 15, color: Colors.grey[500], fontWeight: FontWeight.w500),
           ),
         ],
       ),
     );
   }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Sticky tab bar delegate
-// ─────────────────────────────────────────────────────────────────────────────
-class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
-
-  _StickyTabBarDelegate(this.tabBar);
-
-  @override
-  double get minExtent => tabBar.preferredSize.height;
-
-  @override
-  double get maxExtent => tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Material(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      elevation: overlapsContent ? 2 : 0,
-      child: tabBar,
-    );
-  }
-
-  @override
-  bool shouldRebuild(_StickyTabBarDelegate oldDelegate) =>
-      tabBar != oldDelegate.tabBar;
 }
