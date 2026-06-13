@@ -35,8 +35,8 @@ class FirestoreTicketRepository implements TicketRepository {
   Future<void> deleteTicket(String id) => _col.doc(id).delete();
 
   @override
-  Stream<List<Ticket>> watchByReporter(String uid) => _col
-      .where('reporterId', isEqualTo: uid)
+  Stream<List<Ticket>> watchByWorker(String uid) => _col
+      .where('workerId', isEqualTo: uid)
       .snapshots()
       .map((s) => s.docs.map(_fromDoc).toList());
 

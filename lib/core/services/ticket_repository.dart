@@ -5,7 +5,7 @@ abstract class TicketRepository {
   Future<void> updateTicket(Ticket ticket);
   Future<void> deleteTicket(String id);
 
-  Stream<List<Ticket>> watchByReporter(String uid);
+  Stream<List<Ticket>> watchByWorker(String uid);
   Stream<List<Ticket>> watchByDepartment(String department);
   Stream<List<Ticket>> watchByAssignee(String uid);
 

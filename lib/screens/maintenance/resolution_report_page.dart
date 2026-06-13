@@ -30,7 +30,7 @@ class _ResolutionReportPageState extends State<ResolutionReportPage> {
   bool _submitting = false;
 
   bool get _canEdit =>
-      widget.ticket.status == TicketStatus.pendingValidation ||
+      widget.ticket.status == TicketStatus.pending ||
       widget.ticket.status == TicketStatus.rejected;
 
   @override
@@ -303,7 +303,7 @@ class _ResolutionReportPageState extends State<ResolutionReportPage> {
       await services.repo.updateTicket(
         widget.ticket.copyWith(
           resolutionReport: report,
-          status: TicketStatus.pendingValidation,
+          status: TicketStatus.pending,
           updatedAt: DateTime.now(),
         ),
       );

@@ -5,6 +5,7 @@ import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/widgets/app_shell.dart';
 import 'package:laporpak_fp/firebase_options.dart';
 import 'package:laporpak_fp/screens/auth_page.dart';
+import 'package:laporpak_fp/screens/complete_profile_page.dart';
 import 'package:laporpak_fp/services/auth_service.dart';
 
 void main() async {
@@ -65,6 +66,10 @@ class _UserGate extends StatelessWidget {
               return const Scaffold(
                 body: Center(child: Text('User profile not found.')),
               );
+            }
+
+            if (currentUser.workerId.isEmpty || currentUser.department.isEmpty) {
+              return CompleteProfilePage(user: currentUser);
             }
 
             return AppShell(user: currentUser);

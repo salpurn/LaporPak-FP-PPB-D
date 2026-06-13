@@ -14,13 +14,16 @@ extension TicketCopyWith on Ticket {
     UrgencyLevel? urgency,
     TicketStatus? status,
     String? department,
-    String? reporterId,
+    String? workerId,
     Object? assigneeId = _keep,
     Object? supervisorId = _keep,
     Object? deadline = _keep,
     DateTime? createdAt,
     DateTime? updatedAt,
     Object? resolutionReport = _keep,
+    String? photoUrl,
+    String? workerName,
+    String? workerDepartment,
   }) {
     return Ticket(
       id: id ?? this.id,
@@ -31,7 +34,7 @@ extension TicketCopyWith on Ticket {
       urgency: urgency ?? this.urgency,
       status: status ?? this.status,
       department: department ?? this.department,
-      reporterId: reporterId ?? this.reporterId,
+      workerId: workerId ?? this.workerId,
       assigneeId: identical(assigneeId, _keep) ? this.assigneeId : assigneeId as String?,
       supervisorId: identical(supervisorId, _keep) ? this.supervisorId : supervisorId as String?,
       deadline: identical(deadline, _keep) ? this.deadline : deadline as DateTime?,
@@ -40,6 +43,9 @@ extension TicketCopyWith on Ticket {
       resolutionReport: identical(resolutionReport, _keep)
           ? this.resolutionReport
           : resolutionReport as ResolutionReport?,
+      photoUrl: photoUrl ?? this.photoUrl,
+      workerName: workerName ?? this.workerName,
+      workerDepartment: workerDepartment ?? this.workerDepartment,
     );
   }
 }

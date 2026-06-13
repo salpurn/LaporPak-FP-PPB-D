@@ -12,12 +12,27 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _idController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _departmentController = TextEditingController();
   final _service = AuthService();
   bool _isRegister = false;
   bool _loading = false;
   String? _error;
+  UserRole _selectedRole = UserRole.worker;
 
   Future<void> _submit() async {
+    if (_isRegister) {
+      if (_idController.text.trim().isEmpty ||
+          _nameController.text.trim().isEmpty ||
+          _emailController.text.trim().isEmpty ||
+          _departmentController.text.trim().isEmpty ||
+          _passwordController.text.trim().isEmpty) {
+        setState(() => _error = 'Semua kolom wajib diisi.');
+        return;
+      }
+    }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -25,10 +40,35 @@ class _AuthPageState extends State<AuthPage> {
 
     try {
       if (_isRegister) {
-        await _service.register(_emailController.text.trim(), _passwordController.text.trim());
-      } else {
-        await _service.signIn(_emailController.text.trim(), _passwordController.text.trim());
+        await _service.register(
+          workerId: _idController.text.trim(),
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          role: _selectedRole,
+          department: _departmentController.text.trim(),
+        );
+        await _service.signOut();
+        if (!mounted) return;
+        setState(() {
+          _isRegister = false;
+          _error = null;
+          _idController.clear();
+          _nameController.clear();
+          _emailController.clear();
+          _passwordController.clear();
+          _departmentController.clear();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Akun berhasil dibuat. Silakan masuk.')),
+        );
+        return;
       }
+
+      await _service.signIn(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
 
       if (!mounted) return;
 
@@ -60,7 +100,7 @@ class _AuthPageState extends State<AuthPage> {
 
   String? _routeForRole(UserRole? role) {
     switch (role) {
-      case UserRole.floorWorker:
+      case UserRole.worker:
         return '/worker-dashboard';
       case UserRole.supervisor:
         return '/supervisor-dashboard';
@@ -75,24 +115,69 @@ class _AuthPageState extends State<AuthPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _idController.dispose();
+    _nameController.dispose();
+    _departmentController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isRegister ? 'Register' : 'Sign in')),
-      body: Padding(
+      appBar: AppBar(title: Text(_isRegister ? 'Daftar Akun' : 'Masuk')),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 24),
+            if (_isRegister) ...[
+              TextField(
+                controller: _idController,
+                decoration: const InputDecoration(labelText: 'ID Karyawan'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+              ),
+              const SizedBox(height: 12),
+            ],
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
             const SizedBox(height: 12),
+            if (_isRegister) ...[
+              DropdownButtonFormField<UserRole>(
+                initialValue: _selectedRole,
+                decoration: const InputDecoration(labelText: 'Role'),
+                items: const [
+                  DropdownMenuItem(
+                    value: UserRole.worker,
+                    child: Text('Floor Worker'),
+                  ),
+                  DropdownMenuItem(
+                    value: UserRole.supervisor,
+                    child: Text('Supervisor'),
+                  ),
+                  DropdownMenuItem(
+                    value: UserRole.maintenance,
+                    child: Text('Maintenance'),
+                  ),
+                ],
+                onChanged: (v) {
+                  if (v != null) setState(() => _selectedRole = v);
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _departmentController,
+                decoration: const InputDecoration(labelText: 'Departemen'),
+              ),
+              const SizedBox(height: 12),
+            ],
             TextField(
               controller: _passwordController,
               obscureText: true,
@@ -110,9 +195,10 @@ class _AuthPageState extends State<AuthPage> {
                     ? const SizedBox(
                         height: 16,
                         width: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
                       )
-                    : Text(_isRegister ? 'Create account' : 'Sign in'),
+                    : Text(_isRegister ? 'Daftar' : 'Masuk'),
               ),
             ),
             TextButton(
@@ -125,7 +211,9 @@ class _AuthPageState extends State<AuthPage> {
                       });
                     },
               child: Text(
-                _isRegister ? 'Have an account? Sign in' : 'No account? Register',
+                _isRegister
+                    ? 'Sudah punya akun? Masuk'
+                    : 'Belum punya akun? Daftar',
               ),
             ),
           ],
