@@ -2,6 +2,7 @@ import '../constants/enums.dart';
 
 class AppUser {
   final String uid;
+  final String workerId;
   final String name;
   final String email;
   final UserRole role;
@@ -10,6 +11,7 @@ class AppUser {
 
   const AppUser({
     required this.uid,
+    required this.workerId,
     required this.name,
     required this.email,
     required this.role,
@@ -23,11 +25,12 @@ class AppUser {
     try {
       role = UserRole.values.byName(roleRaw);
     } catch (_) {
-      role = UserRole.floorWorker;
+      role = UserRole.worker;
     }
 
     return AppUser(
       uid: json['uid'] as String? ?? '',
+      workerId: (json['workerId'] ?? json['employeeId']) as String? ?? '',
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
       role: role,
@@ -39,6 +42,7 @@ class AppUser {
   Map<String, dynamic> toJson() {
     return {
       'uid': uid,
+      'workerId': workerId,
       'name': name,
       'email': email,
       'role': role.name,

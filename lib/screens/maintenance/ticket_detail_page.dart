@@ -15,7 +15,7 @@ class TicketDetailPage extends StatelessWidget {
   const TicketDetailPage({super.key, required this.ticket, required this.user});
 
   bool get _canEdit =>
-      ticket.status == TicketStatus.pendingValidation ||
+      ticket.status == TicketStatus.pending ||
       ticket.status == TicketStatus.rejected;
 
   bool get _canSubmit =>
@@ -36,6 +36,8 @@ class TicketDetailPage extends StatelessWidget {
           children: [
             _headerCard(),
             const SizedBox(height: 12),
+            _workerCard(context),
+            const SizedBox(height: 12),
             _detailsCard(),
             if (ticket.resolutionReport != null) ...[
               const SizedBox(height: 12),
@@ -45,6 +47,59 @@ class TicketDetailPage extends StatelessWidget {
             _actionButtons(context),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _workerCard(BuildContext context) {
+    final name = ticket.workerName.isNotEmpty ? ticket.workerName : '—';
+    final dept = ticket.workerDepartment.isNotEmpty
+        ? ticket.workerDepartment
+        : ticket.department;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            child: Text(
+              name.isNotEmpty ? name[0].toUpperCase() : '?',
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
+                const SizedBox(height: 2),
+                Text(dept,
+                    style:
+                        const TextStyle(fontSize: 12, color: Colors.grey)),
+                const SizedBox(height: 2),
+                Text(
+                  'ID: ${ticket.workerId}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.person_outline, size: 18, color: Colors.grey),
+        ],
       ),
     );
   }
@@ -224,7 +279,7 @@ class TicketDetailPage extends StatelessWidget {
       );
     }
 
-    if (ticket.status == TicketStatus.pendingValidation) {
+    if (ticket.status == TicketStatus.pending) {
       return const Center(
         child: Text('Awaiting supervisor validation.', style: TextStyle(color: Colors.grey)),
       );

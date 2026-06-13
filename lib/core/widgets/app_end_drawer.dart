@@ -18,9 +18,8 @@ class AppEndDrawer extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              height: 180,
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               color: color,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,7 +53,43 @@ class AppEndDrawer extends StatelessWidget {
                       style: const TextStyle(color: Colors.white, fontSize: 13),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  if (user.department.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Opacity(
+                      opacity: 0.85,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.business_outlined,
+                              size: 13, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text(
+                            user.department,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 2),
+                  Opacity(
+                    opacity: 0.75,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.badge_outlined,
+                            size: 13, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          'ID: ${user.workerId.isNotEmpty ? user.workerId : user.uid.substring(0, 8).toUpperCase()}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontFamily: 'monospace'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   RoleBadge(role: user.role),
                 ],
               ),

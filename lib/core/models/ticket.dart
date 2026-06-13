@@ -10,13 +10,16 @@ class Ticket {
   final UrgencyLevel urgency;
   final TicketStatus status;
   final String department;
-  final String reporterId;
+  final String workerId;
   final String? assigneeId;
   final String? supervisorId;
+  final String workerName;
+  final String workerDepartment;
   final DateTime? deadline;
   final DateTime createdAt;
   final DateTime updatedAt;
   final ResolutionReport? resolutionReport;
+  final String photoUrl;
 
   const Ticket({
     required this.id,
@@ -27,13 +30,16 @@ class Ticket {
     required this.urgency,
     required this.status,
     required this.department,
-    required this.reporterId,
+    required this.workerId,
     required this.assigneeId,
     required this.supervisorId,
+    required this.workerName,
+    required this.workerDepartment,
     required this.deadline,
     required this.createdAt,
     required this.updatedAt,
     required this.resolutionReport,
+    this.photoUrl = '',
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
@@ -46,9 +52,11 @@ class Ticket {
       urgency: UrgencyLevel.values.byName(json['urgency'] as String),
       status: TicketStatus.values.byName(json['status'] as String),
       department: json['department'] as String,
-      reporterId: json['reporterId'] as String,
+      workerId: json['workerId'] as String,
       assigneeId: json['assigneeId'] as String?,
       supervisorId: json['supervisorId'] as String?,
+      workerName: json['workerName'] as String? ?? '',
+      workerDepartment: json['workerDepartment'] as String? ?? '',
       deadline: json['deadline'] == null
           ? null
           : DateTime.parse(json['deadline'] as String),
@@ -59,6 +67,7 @@ class Ticket {
           : ResolutionReport.fromJson(
               json['resolutionReport'] as Map<String, dynamic>,
             ),
+      photoUrl: json['photoUrl'] as String? ?? '',
     );
   }
 
@@ -72,13 +81,16 @@ class Ticket {
       'urgency': urgency.name,
       'status': status.name,
       'department': department,
-      'reporterId': reporterId,
+      'workerId': workerId,
       'assigneeId': assigneeId,
       'supervisorId': supervisorId,
+      'workerName': workerName,
+      'workerDepartment': workerDepartment,
       'deadline': deadline?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'resolutionReport': resolutionReport?.toJson(),
+      'photoUrl': photoUrl,
     };
   }
 }
