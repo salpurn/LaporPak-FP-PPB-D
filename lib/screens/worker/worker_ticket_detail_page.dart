@@ -258,7 +258,7 @@ class WorkerTicketDetailPage extends StatelessWidget {
           'This report has been assigned to a maintenance worker.',
           const Color(0xFF1976D2),
         ),
-      TicketStatus.pending => (
+      TicketStatus.pendingValidation => (
           Icons.hourglass_top_outlined,
           'Awaiting supervisor validation.',
           const Color(0xFFF57C00),

@@ -52,7 +52,7 @@ class Ticket {
       urgency: UrgencyLevel.values.byName(json['urgency'] as String),
       status: TicketStatus.values.byName(json['status'] as String),
       department: json['department'] as String,
-      workerId: json['workerId'] as String,
+      workerId: json['workerId'] as String? ?? json['reporterId'] as String? ?? '',
       assigneeId: json['assigneeId'] as String?,
       supervisorId: json['supervisorId'] as String?,
       workerName: json['workerName'] as String? ?? '',
