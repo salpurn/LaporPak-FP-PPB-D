@@ -5,6 +5,7 @@ import 'package:laporpak_fp/core/constants/enums.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
 import 'package:laporpak_fp/core/services/firestore/firestore_ticket_repository.dart';
 import 'package:laporpak_fp/core/services/holiday_service.dart';
+import 'package:laporpak_fp/widgets/holiday_calendar_dialog.dart';
 
 class SupervisorTicketDetailPage extends StatefulWidget {
   final Ticket ticket;
@@ -141,7 +142,7 @@ class _SupervisorTicketDetailPageState extends State<SupervisorTicketDetailPage>
       },
     ).then((assigned) {
       if (assigned == true && mounted) {
-        Navigator.pop(context); // go back to dashboard
+        Navigator.pop(this.context); // go back to dashboard
       }
     });
   }
@@ -489,38 +490,38 @@ class _AssignWorkerSheetState extends State<_AssignWorkerSheet> {
 
   Future<void> _pickDeadline() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDeadline ?? now.add(const Duration(days: 1)),
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
+    final firstDate = DateTime(now.year, now.month, now.day);
+    final sheetContext = context;
+    final picked = await showDialog<DateTime>(
+      context: sheetContext,
+      builder: (context) => HolidayCalendarDialog(
+        initialDate: _selectedDeadline ?? now.add(const Duration(days: 1)),
+        firstDate: firstDate,
+        lastDate: firstDate.add(const Duration(days: 365)),
+        holidayService: widget.holidayService,
+      ),
     );
 
     if (picked != null) {
       // Prompt for time
+      if (!sheetContext.mounted) return;
       final time = await showTimePicker(
-        context: context,
+        context: sheetContext,
         initialTime: TimeOfDay.now(),
       );
-      
+
       if (time != null && mounted) {
-        final finalDateTime = DateTime(picked.year, picked.month, picked.day, time.hour, time.minute);
+        final finalDateTime = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          time.hour,
+          time.minute,
+        );
         setState(() {
           _selectedDeadline = finalDateTime;
-          _isHoliday = false; // reset while checking
+          _isHoliday = false;
         });
-
-        // Check holiday
-        try {
-          final isHoliday = await widget.holidayService.isPublicHoliday(finalDateTime);
-          if (mounted) {
-            setState(() {
-              _isHoliday = isHoliday;
-            });
-          }
-        } catch (e) {
-          debugPrint('Failed to check holiday: $e');
-        }
       }
     }
   }
@@ -531,6 +532,22 @@ class _AssignWorkerSheetState extends State<_AssignWorkerSheet> {
         const SnackBar(content: Text('Please select a worker and a deadline.')),
       );
       return;
+    }
+
+    try {
+      if (await widget.holidayService.isPublicHoliday(_selectedDeadline!)) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tanggal merah tidak bisa dipilih sebagai deadline.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _isHoliday = true);
+        return;
+      }
+    } catch (e) {
+      debugPrint('Failed to re-check holiday: $e');
     }
 
     setState(() => _isLoading = true);
@@ -606,7 +623,7 @@ class _AssignWorkerSheetState extends State<_AssignWorkerSheet> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
                 hint: const Text('Choose a worker'),
-                value: _selectedWorkerId,
+                initialValue: _selectedWorkerId,
                 items: workers.map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
                   final name = data['name'] ?? 'Unknown';
