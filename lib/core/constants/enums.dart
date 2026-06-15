@@ -1,6 +1,6 @@
 enum UserRole { worker, supervisor, maintenance }
 
-enum TicketStatus { open, assigned, pending, closed, rejected }
+enum TicketStatus { open, assigned, pendingValidation, closed, rejected }
 
 enum HazardCategory { electrical, chemical, structural, janitorial }
 

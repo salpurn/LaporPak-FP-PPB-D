@@ -15,7 +15,7 @@ class TicketDetailPage extends StatelessWidget {
   const TicketDetailPage({super.key, required this.ticket, required this.user});
 
   bool get _canEdit =>
-      ticket.status == TicketStatus.pending ||
+      ticket.status == TicketStatus.pendingValidation ||
       ticket.status == TicketStatus.rejected;
 
   bool get _canSubmit =>
@@ -279,7 +279,7 @@ class TicketDetailPage extends StatelessWidget {
       );
     }
 
-    if (ticket.status == TicketStatus.pending) {
+    if (ticket.status == TicketStatus.pendingValidation) {
       return const Center(
         child: Text('Awaiting supervisor validation.', style: TextStyle(color: Colors.grey)),
       );

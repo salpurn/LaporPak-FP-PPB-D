@@ -3,8 +3,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:laporpak_fp/core/constants/enums.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
+import 'package:laporpak_fp/core/services/holiday_service.dart';
 import 'package:laporpak_fp/screens/maintenance/ticket_copy_with.dart';
 import 'package:laporpak_fp/screens/worker/worker_services.dart';
+import 'package:laporpak_fp/widgets/holiday_calendar_dialog.dart';
 
 class WorkerTicketFormPage extends StatefulWidget {
   final AppUser user;
@@ -279,6 +281,20 @@ class _WorkerTicketFormPageState extends State<WorkerTicketFormPage> {
 
     try {
       final services = WorkerServices.instance;
+      if (_deadline != null) {
+        final isHoliday = await NagerDateHolidayService().isPublicHoliday(_deadline!);
+        if (isHoliday) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Tanggal merah tidak bisa dipilih sebagai deadline.'),
+              ),
+            );
+          }
+          return;
+        }
+      }
+
       String photoUrl = _existingPhotoUrl ?? '';
 
       if (_pickedFile != null) {
@@ -441,12 +457,17 @@ class _DeadlinePicker extends StatelessWidget {
 
   Future<void> _pick(BuildContext context) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final firstDate = DateTime(now.year, now.month, now.day);
+    final picked = await showDialog<DateTime>(
       context: context,
-      initialDate: value ?? now.add(const Duration(days: 1)),
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
+      builder: (context) => HolidayCalendarDialog(
+        initialDate: value ?? now.add(const Duration(days: 1)),
+        firstDate: firstDate,
+        lastDate: firstDate.add(const Duration(days: 365)),
+        holidayService: NagerDateHolidayService(),
+      ),
     );
+
     if (picked != null) {
       if (!context.mounted) return;
       final time = await showTimePicker(
