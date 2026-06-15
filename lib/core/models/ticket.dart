@@ -43,15 +43,24 @@ class Ticket {
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
+    T safeEnum<T extends Enum>(List<T> values, String? raw, T fallback) {
+      if (raw == null) return fallback;
+      try {
+        return values.byName(raw);
+      } catch (_) {
+        return fallback;
+      }
+    }
+
     return Ticket(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      location: json['location'] as String,
-      description: json['description'] as String,
-      category: HazardCategory.values.byName(json['category'] as String),
-      urgency: UrgencyLevel.values.byName(json['urgency'] as String),
-      status: TicketStatus.values.byName(json['status'] as String),
-      department: json['department'] as String,
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      location: json['location'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      category: safeEnum(HazardCategory.values, json['category'] as String?, HazardCategory.structural),
+      urgency: safeEnum(UrgencyLevel.values, json['urgency'] as String?, UrgencyLevel.low),
+      status: safeEnum(TicketStatus.values, json['status'] as String?, TicketStatus.open),
+      department: json['department'] as String? ?? '',
       workerId: json['workerId'] as String? ?? json['reporterId'] as String? ?? '',
       assigneeId: json['assigneeId'] as String?,
       supervisorId: json['supervisorId'] as String?,
@@ -59,9 +68,9 @@ class Ticket {
       workerDepartment: json['workerDepartment'] as String? ?? '',
       deadline: json['deadline'] == null
           ? null
-          : DateTime.parse(json['deadline'] as String),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+          : DateTime.tryParse(json['deadline'] as String) ?? DateTime.now(),
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
       resolutionReport: json['resolutionReport'] == null
           ? null
           : ResolutionReport.fromJson(

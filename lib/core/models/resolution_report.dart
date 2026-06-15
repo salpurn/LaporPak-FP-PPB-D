@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ResolutionReport {
   final String completionNote;
   final String photoUrl;
@@ -12,11 +14,18 @@ class ResolutionReport {
   });
 
   factory ResolutionReport.fromJson(Map<String, dynamic> json) {
+    // submittedAt may arrive as a Firestore Timestamp OR an ISO String
+    DateTime parseDate(dynamic v) {
+      if (v is Timestamp) return v.toDate();
+      if (v is String) return DateTime.parse(v);
+      return DateTime.now();
+    }
+
     return ResolutionReport(
-      completionNote: json['completionNote'] as String,
-      photoUrl: json['photoUrl'] as String,
-      submittedBy: json['submittedBy'] as String,
-      submittedAt: DateTime.parse(json['submittedAt'] as String),
+      completionNote: json['completionNote'] as String? ?? '',
+      photoUrl: json['photoUrl'] as String? ?? '',
+      submittedBy: json['submittedBy'] as String? ?? '',
+      submittedAt: parseDate(json['submittedAt']),
     );
   }
 

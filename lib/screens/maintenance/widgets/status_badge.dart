@@ -47,7 +47,7 @@ class StatusBadge extends StatelessWidget {
       case TicketStatus.assigned:
         return 'Assigned';
       case TicketStatus.pendingValidation:
-        return 'pendingValidation Validation';
+        return 'Pending Validation';
       case TicketStatus.closed:
         return 'Closed';
       case TicketStatus.rejected:

@@ -7,7 +7,7 @@ class PublicHoliday {
   final String localName;
   final String name;
 
-  PublicHoliday({
+  const PublicHoliday({
     required this.date,
     required this.localName,
     required this.name,
