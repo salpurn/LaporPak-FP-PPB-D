@@ -43,7 +43,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     final dept = _departmentController.text.trim();
 
     if (id.isEmpty || name.isEmpty || dept.isEmpty) {
-      setState(() => _error = 'Semua kolom wajib diisi.');
+      setState(() => _error = 'All fields are required.');
       return;
     }
 
@@ -85,7 +85,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lengkapi Profil'),
+        title: const Text('Update Profile'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
@@ -97,18 +97,18 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Profil kamu belum lengkap. Isi data berikut untuk melanjutkan.',
+              'Complete your profile. Fill in the following details to continue.',
               style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _idController,
-              decoration: const InputDecoration(labelText: 'ID Karyawan'),
+              decoration: const InputDecoration(labelText: 'Worker ID'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+              decoration: const InputDecoration(labelText: 'Full Name'),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<UserRole>(
@@ -135,7 +135,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
             const SizedBox(height: 12),
             TextField(
               controller: _departmentController,
-              decoration: const InputDecoration(labelText: 'Departemen'),
+              decoration: const InputDecoration(labelText: 'Department'),
             ),
             const SizedBox(height: 20),
             if (_error != null)
@@ -154,7 +154,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('Simpan & Lanjutkan'),
+                    : const Text('Save & Continue'),
               ),
             ),
           ],
