@@ -14,7 +14,6 @@ class MaintenanceHomePage extends StatelessWidget {
   static const _activeStatuses = {
     TicketStatus.assigned,
     TicketStatus.rejected,
-    TicketStatus.pendingValidation,
   };
 
   @override

@@ -96,7 +96,7 @@ class AuthService {
       workerId: '',
       name: nameFallback,
       email: current.email ?? '',
-      role: UserRole.worker,
+      role: UserRole.floorWorker,
       department: '',
       fcmToken: '',
     );

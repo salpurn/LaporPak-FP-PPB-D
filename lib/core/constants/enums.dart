@@ -1,4 +1,4 @@
-enum UserRole { worker, supervisor, maintenance }
+enum UserRole { floorWorker, supervisor, maintenance }
 
 enum TicketStatus { open, assigned, pendingValidation, closed, rejected }
 

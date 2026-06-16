@@ -29,9 +29,7 @@ class _ResolutionReportPageState extends State<ResolutionReportPage> {
   String? _existingPhotoUrl;
   bool _submitting = false;
 
-  bool get _canEdit =>
-      widget.ticket.status == TicketStatus.pendingValidation ||
-      widget.ticket.status == TicketStatus.rejected;
+  bool get _canEdit => widget.ticket.status == TicketStatus.rejected;
 
   @override
   void initState() {

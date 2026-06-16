@@ -9,8 +9,13 @@ import 'package:laporpak_fp/widgets/holiday_calendar_dialog.dart';
 
 class SupervisorTicketDetailPage extends StatefulWidget {
   final Ticket ticket;
+  final String supervisorUid;
 
-  const SupervisorTicketDetailPage({super.key, required this.ticket});
+  const SupervisorTicketDetailPage({
+    super.key,
+    required this.ticket,
+    required this.supervisorUid,
+  });
 
   @override
   State<SupervisorTicketDetailPage> createState() => _SupervisorTicketDetailPageState();
@@ -71,7 +76,7 @@ class _SupervisorTicketDetailPageState extends State<SupervisorTicketDetailPage>
       case TicketStatus.assigned:
         return 'Assigned';
       case TicketStatus.pendingValidation:
-        return 'pendingValidation Validation';
+        return 'Pending Validation';
       case TicketStatus.closed:
         return 'Closed';
       case TicketStatus.rejected:
@@ -138,6 +143,7 @@ class _SupervisorTicketDetailPageState extends State<SupervisorTicketDetailPage>
           holidayService: _holidayService,
           ticketRepo: _ticketRepo,
           isReassign: isReassign,
+          supervisorUid: widget.supervisorUid,
         );
       },
     ).then((assigned) {
@@ -470,12 +476,14 @@ class _AssignWorkerSheet extends StatefulWidget {
   final HolidayService holidayService;
   final FirestoreTicketRepository ticketRepo;
   final bool isReassign;
+  final String supervisorUid;
 
   const _AssignWorkerSheet({
     required this.ticket,
     required this.holidayService,
     required this.ticketRepo,
     required this.isReassign,
+    required this.supervisorUid,
   });
 
   @override
@@ -555,6 +563,7 @@ class _AssignWorkerSheetState extends State<_AssignWorkerSheet> {
       await widget.ticketRepo.assignTicket(
         id: widget.ticket.id,
         workerId: _selectedWorkerId!,
+        supervisorId: widget.supervisorUid,
         deadline: _selectedDeadline!,
       );
       if (mounted) {

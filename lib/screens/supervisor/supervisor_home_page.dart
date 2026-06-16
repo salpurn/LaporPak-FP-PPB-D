@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:laporpak_fp/core/constants/enums.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
+import 'package:laporpak_fp/core/services/firestore/firestore_ticket_repository.dart';
 import 'package:laporpak_fp/screens/supervisor/supervisor_ticket_detail_page.dart';
 import 'package:laporpak_fp/screens/supervisor/widgets/supervisor_ticket_card.dart';
 
@@ -28,13 +28,14 @@ class _SupervisorHomePageState extends State<SupervisorHomePage>
   _SortOption _sortOption = _SortOption.dateDesc;
   TicketStatus? _filterStatus; // null = all
   late TabController _tabController;
+  final _repo = FirestoreTicketRepository();
 
   // Tabs map status filter
   static const _tabs = <String, TicketStatus?>{
     'All': null,
     'Open': TicketStatus.open,
     'Assigned': TicketStatus.assigned,
-    'pendingValidation': TicketStatus.pendingValidation,
+    'Pending': TicketStatus.pendingValidation,
     'Closed': TicketStatus.closed,
     'Rejected': TicketStatus.rejected,
   };
@@ -122,7 +123,7 @@ class _SupervisorHomePageState extends State<SupervisorHomePage>
   void _openDetail(Ticket ticket) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => SupervisorTicketDetailPage(ticket: ticket),
+        builder: (_) => SupervisorTicketDetailPage(ticket: ticket, supervisorUid: widget.user.uid),
       ),
     );
   }
@@ -132,8 +133,8 @@ class _SupervisorHomePageState extends State<SupervisorHomePage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('tickets').snapshots(),
+    return StreamBuilder<List<Ticket>>(
+      stream: _repo.watchByDepartment(widget.user.department),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -158,26 +159,7 @@ class _SupervisorHomePageState extends State<SupervisorHomePage>
           );
         }
 
-        final docs = snapshot.data?.docs ?? [];
-        final allTickets = <Ticket>[];
-
-        Map<String, dynamic> sanitize(Map<String, dynamic> m) {
-          return m.map((key, value) {
-            if (value is Timestamp) return MapEntry(key, value.toDate().toIso8601String());
-            if (value is Map<String, dynamic>) return MapEntry(key, sanitize(value));
-            return MapEntry(key, value);
-          });
-        }
-
-        for (final doc in docs) {
-          try {
-            final data = doc.data() as Map<String, dynamic>;
-            allTickets.add(Ticket.fromJson(sanitize({...data, 'id': doc.id})));
-          } catch (e) {
-            debugPrint('[Supervisor] Skipped ${doc.id}: $e');
-          }
-        }
-
+        final allTickets = snapshot.data ?? [];
         final counts = _statusCounts(allTickets);
         final displayTickets = _sorted(_filtered(allTickets));
 

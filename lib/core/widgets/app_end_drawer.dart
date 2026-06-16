@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/widgets/role_badge.dart';
+import 'package:laporpak_fp/screens/complete_profile_page.dart';
 import 'package:laporpak_fp/services/auth_service.dart';
 
 class AppEndDrawer extends StatelessWidget {
@@ -98,7 +99,13 @@ class AppEndDrawer extends StatelessWidget {
               leading: const Icon(Icons.person_outline),
               title: const Text('Profile'),
               onTap: () {
-                Navigator.pushReplacementNamed(context, '/profile');
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CompleteProfilePage(user: user),
+                  ),
+                );
               },
             ),
             ListTile(

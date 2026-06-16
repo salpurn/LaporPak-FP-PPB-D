@@ -71,7 +71,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
       final String route;
       switch (_selectedRole) {
-        case UserRole.worker:
+        case UserRole.floorWorker:
           route = '/worker-dashboard';
         case UserRole.supervisor:
           route = '/supervisor-dashboard';
@@ -122,7 +122,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
               decoration: const InputDecoration(labelText: 'Role'),
               items: const [
                 DropdownMenuItem(
-                  value: UserRole.worker,
+                  value: UserRole.floorWorker,
                   child: Text('Floor Worker'),
                 ),
                 DropdownMenuItem(

@@ -30,7 +30,7 @@ class RoleBadge extends StatelessWidget {
 
   Color _roleColor(UserRole role) {
     switch (role) {
-      case UserRole.worker:
+      case UserRole.floorWorker:
         return const Color(0xFF1976D2);
       case UserRole.supervisor:
         return const Color(0xFF7C4DFF);
@@ -41,7 +41,7 @@ class RoleBadge extends StatelessWidget {
 
   String _roleLabel(UserRole role) {
     switch (role) {
-      case UserRole.worker:
+      case UserRole.floorWorker:
         return 'Floor Worker';
       case UserRole.supervisor:
         return 'Supervisor';

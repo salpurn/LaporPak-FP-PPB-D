@@ -19,7 +19,7 @@ class _AuthPageState extends State<AuthPage> {
   bool _isRegister = false;
   bool _loading = false;
   String? _error;
-  UserRole _selectedRole = UserRole.worker;
+  UserRole _selectedRole = UserRole.floorWorker;
 
   Future<void> _submit() async {
     if (_isRegister) {
@@ -100,7 +100,7 @@ class _AuthPageState extends State<AuthPage> {
 
   String? _routeForRole(UserRole? role) {
     switch (role) {
-      case UserRole.worker:
+      case UserRole.floorWorker:
         return '/worker-dashboard';
       case UserRole.supervisor:
         return '/supervisor-dashboard';
@@ -155,7 +155,7 @@ class _AuthPageState extends State<AuthPage> {
                 decoration: const InputDecoration(labelText: 'Role'),
                 items: const [
                   DropdownMenuItem(
-                    value: UserRole.worker,
+                    value: UserRole.floorWorker,
                     child: Text('Floor Worker'),
                   ),
                   DropdownMenuItem(
