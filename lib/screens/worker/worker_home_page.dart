@@ -50,6 +50,10 @@ class WorkerHomePage extends StatelessWidget {
           }
 
           final tickets = (snapshot.data ?? [])
+              .where((t) =>
+                  t.status != TicketStatus.closed &&
+                  t.status != TicketStatus.rejected)
+              .toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
           if (tickets.isEmpty) {

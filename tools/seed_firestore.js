@@ -22,8 +22,8 @@ const db = getFirestore();
 // ─── User constants (from Firestore users collection) ────────────────────────
 
 const WORKER = {
-  uid: '5s39WAfJHZYkxShNjPNNi8KDxS03',
-  workerId: 'ID146',          // AppUser.workerId — used as Ticket.workerId
+  uid: 'aOWVIauXAucJyu3PRS1vmCPCkal2',
+  workerId: '146',          // AppUser.workerId — used as Ticket.workerId
   name: 'Sal Purnama',
   department: 'sukolilo',
 };
@@ -185,8 +185,17 @@ const tickets = [
 
 async function seed() {
   const col = db.collection('tickets');
-  const batch = db.batch();
 
+  // Delete all existing tickets before re-seeding
+  const existing = await col.get();
+  if (!existing.empty) {
+    const deleteBatch = db.batch();
+    existing.docs.forEach(doc => deleteBatch.delete(doc.ref));
+    await deleteBatch.commit();
+    console.log(`✓ Deleted ${existing.size} existing tickets`);
+  }
+
+  const batch = db.batch();
   for (const ticket of tickets) {
     batch.set(col.doc(ticket.id), ticket);
   }

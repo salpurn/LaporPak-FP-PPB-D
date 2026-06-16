@@ -59,13 +59,13 @@ class AuthService {
     return _auth.signOut();
   }
 
-  Stream<User?> authStateChanges() {
+  Stream<User?> watchAuthState() {
     return _auth.authStateChanges();
   }
 
-  Future<AppUser?> fetchCurrentUser() async {
+  Future<AppUser> currentUser() async {
     final current = _auth.currentUser;
-    if (current == null) return null;
+    if (current == null) throw StateError('currentUser() called with no authenticated user');
 
     final doc = await _firestore
         .collection(Collections.users)

@@ -3,10 +3,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:laporpak_fp/core/constants/enums.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
-import 'package:laporpak_fp/core/services/holiday_service.dart';
 import 'package:laporpak_fp/screens/maintenance/ticket_copy_with.dart';
 import 'package:laporpak_fp/screens/worker/worker_services.dart';
-import 'package:laporpak_fp/widgets/holiday_calendar_dialog.dart';
 
 class WorkerTicketFormPage extends StatefulWidget {
   final AppUser user;
@@ -26,7 +24,6 @@ class _WorkerTicketFormPageState extends State<WorkerTicketFormPage> {
 
   late HazardCategory _category;
   late UrgencyLevel _urgency;
-  DateTime? _deadline;
   XFile? _pickedFile;
   String? _existingPhotoUrl;
   bool _submitting = false;
@@ -42,7 +39,6 @@ class _WorkerTicketFormPageState extends State<WorkerTicketFormPage> {
     _descriptionController = TextEditingController(text: e?.description ?? '');
     _category = e?.category ?? HazardCategory.structural;
     _urgency = e?.urgency ?? UrgencyLevel.medium;
-    _deadline = e?.deadline;
     _existingPhotoUrl = (e?.photoUrl.isNotEmpty == true) ? e!.photoUrl : null;
   }
 
@@ -118,13 +114,6 @@ class _WorkerTicketFormPageState extends State<WorkerTicketFormPage> {
               _UrgencyDropdown(
                 value: _urgency,
                 onChanged: (v) => setState(() => _urgency = v),
-              ),
-              const SizedBox(height: 16),
-              _sectionLabel('Deadline (optional)'),
-              const SizedBox(height: 6),
-              _DeadlinePicker(
-                value: _deadline,
-                onChanged: (v) => setState(() => _deadline = v),
               ),
               const SizedBox(height: 16),
               _sectionLabel('Photo (optional)'),
@@ -281,20 +270,6 @@ class _WorkerTicketFormPageState extends State<WorkerTicketFormPage> {
 
     try {
       final services = WorkerServices.instance;
-      if (_deadline != null) {
-        final isHoliday = await NagerDateHolidayService().isPublicHoliday(_deadline!);
-        if (isHoliday) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Tanggal merah tidak bisa dipilih sebagai deadline.'),
-              ),
-            );
-          }
-          return;
-        }
-      }
-
       String photoUrl = _existingPhotoUrl ?? '';
 
       if (_pickedFile != null) {
@@ -310,7 +285,6 @@ class _WorkerTicketFormPageState extends State<WorkerTicketFormPage> {
           description: _descriptionController.text.trim(),
           category: _category,
           urgency: _urgency,
-          deadline: _deadline,
           photoUrl: photoUrl,
           updatedAt: now,
         );
@@ -330,7 +304,7 @@ class _WorkerTicketFormPageState extends State<WorkerTicketFormPage> {
           workerDepartment: widget.user.department,
           assigneeId: null,
           supervisorId: null,
-          deadline: _deadline,
+          deadline: null,
           createdAt: now,
           updatedAt: now,
           resolutionReport: null,
@@ -415,78 +389,4 @@ class _UrgencyDropdown extends StatelessWidget {
       case UrgencyLevel.critical: return 'Critical';
     }
   }
-}
-
-class _DeadlinePicker extends StatelessWidget {
-  final DateTime? value;
-  final ValueChanged<DateTime?> onChanged;
-
-  const _DeadlinePicker({required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _pick(context),
-            icon: const Icon(Icons.calendar_today_outlined, size: 18),
-            label: Text(
-              value == null ? 'Set deadline' : _format(value!),
-              style: TextStyle(
-                color: value == null ? Colors.grey.shade600 : null,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            ),
-          ),
-        ),
-        if (value != null) ...[
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: () => onChanged(null),
-            icon: const Icon(Icons.close, size: 18),
-            tooltip: 'Clear deadline',
-          ),
-        ],
-      ],
-    );
-  }
-
-  Future<void> _pick(BuildContext context) async {
-    final now = DateTime.now();
-    final firstDate = DateTime(now.year, now.month, now.day);
-    final picked = await showDialog<DateTime>(
-      context: context,
-      builder: (context) => HolidayCalendarDialog(
-        initialDate: value ?? now.add(const Duration(days: 1)),
-        firstDate: firstDate,
-        lastDate: firstDate.add(const Duration(days: 365)),
-        holidayService: NagerDateHolidayService(),
-      ),
-    );
-
-    if (picked != null) {
-      if (!context.mounted) return;
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(value ?? now),
-      );
-      if (time != null && context.mounted) {
-        onChanged(DateTime(
-          picked.year,
-          picked.month,
-          picked.day,
-          time.hour,
-          time.minute,
-        ));
-      }
-    }
-  }
-
-  String _format(DateTime dt) =>
-      '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}'
-      '  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 }

@@ -44,7 +44,7 @@ class _UserGate extends StatelessWidget {
     final authService = AuthService();
 
     return StreamBuilder<User?>(
-      stream: authService.authStateChanges(),
+      stream: authService.watchAuthState(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -54,19 +54,20 @@ class _UserGate extends StatelessWidget {
           return const AuthPage();
         }
 
-        return FutureBuilder<AppUser?>(
-          future: authService.fetchCurrentUser(),
+        return FutureBuilder<AppUser>(
+          future: authService.currentUser(),
           builder: (context, userSnapshot) {
             if (userSnapshot.connectionState == ConnectionState.waiting) {
               return const Scaffold(body: Center(child: CircularProgressIndicator()));
             }
 
-            final currentUser = userSnapshot.data;
-            if (currentUser == null) {
+            if (userSnapshot.hasError || !userSnapshot.hasData) {
               return const Scaffold(
                 body: Center(child: Text('User profile not found.')),
               );
             }
+
+            final currentUser = userSnapshot.data!;
 
             if (currentUser.workerId.isEmpty || currentUser.department.isEmpty) {
               return CompleteProfilePage(user: currentUser);
