@@ -87,7 +87,7 @@ class _AppShellState extends State<AppShell> {
     }
 
     switch (widget.user.role) {
-      case UserRole.worker:
+      case UserRole.floorWorker:
         return 'My Reports';
       case UserRole.supervisor:
         return 'Department Dashboard';
@@ -103,7 +103,7 @@ class _AppShellState extends State<AppShell> {
 
     if (_currentIndex == 2) {
       switch (widget.user.role) {
-        case UserRole.worker:
+        case UserRole.floorWorker:
           return WorkerHistoryPage(user: widget.user);
         case UserRole.supervisor:
           return SupervisorHistoryPage(user: widget.user);
@@ -113,7 +113,7 @@ class _AppShellState extends State<AppShell> {
     }
 
     switch (widget.user.role) {
-      case UserRole.worker:
+      case UserRole.floorWorker:
         return WorkerHomePage(user: widget.user);
       case UserRole.supervisor:
         return SupervisorHomePage(user: widget.user);

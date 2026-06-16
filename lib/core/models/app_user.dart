@@ -23,9 +23,11 @@ class AppUser {
     final roleRaw = json['role'] as String? ?? '';
     UserRole role;
     try {
-      role = UserRole.values.byName(roleRaw);
+      // 'worker' was the old enum name; map it to floorWorker for existing Firestore docs
+      final normalized = roleRaw == 'worker' ? 'floorWorker' : roleRaw;
+      role = UserRole.values.byName(normalized);
     } catch (_) {
-      role = UserRole.worker;
+      role = UserRole.floorWorker;
     }
 
     return AppUser(

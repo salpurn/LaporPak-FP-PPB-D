@@ -56,10 +56,12 @@ class FirestoreTicketRepository implements TicketRepository {
   Future<void> assignTicket({
     required String id,
     required String workerId,
+    required String supervisorId,
     required DateTime deadline,
   }) =>
       _col.doc(id).update({
         'assigneeId': workerId,
+        'supervisorId': supervisorId,
         'deadline': deadline.toIso8601String(),
         'status': TicketStatus.assigned.name,
         'updatedAt': DateTime.now().toIso8601String(),

@@ -12,6 +12,7 @@ abstract class TicketRepository {
   Future<void> assignTicket({
     required String id,
     required String workerId,
+    required String supervisorId,
     required DateTime deadline,
   });
 
