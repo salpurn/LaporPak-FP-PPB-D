@@ -3,7 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:laporpak_fp/core/constants/enums.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
-import 'package:laporpak_fp/screens/maintenance/ticket_copy_with.dart';
+import 'package:laporpak_fp/core/models/ticket_copy_with.dart';
 import 'package:laporpak_fp/screens/worker/worker_services.dart';
 
 class WorkerTicketFormPage extends StatefulWidget {

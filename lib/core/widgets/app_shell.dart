@@ -2,9 +2,11 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:laporpak_fp/core/constants/enums.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
+import 'package:laporpak_fp/core/services/notification_service.dart';
 import 'package:laporpak_fp/core/widgets/app_bottom_nav.dart';
 import 'package:laporpak_fp/core/widgets/app_end_drawer.dart';
 import 'package:laporpak_fp/screens/maintenance/maintenance_history_page.dart';
+import 'package:laporpak_fp/screens/notifications_page.dart';
 import 'package:laporpak_fp/screens/maintenance/maintenance_home_page.dart';
 import 'package:laporpak_fp/screens/supervisor/supervisor_history_page.dart';
 import 'package:laporpak_fp/screens/supervisor/supervisor_home_page.dart';
@@ -22,6 +24,12 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    NotificationService.requestPermission();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +106,7 @@ class _AppShellState extends State<AppShell> {
 
   Widget _currentBody() {
     if (_currentIndex == 1) {
-      return const Center(child: Text('Notifications — coming soon'));
+      return NotificationsPage(user: widget.user);
     }
 
     if (_currentIndex == 2) {

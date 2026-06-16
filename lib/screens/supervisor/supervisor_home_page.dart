@@ -1,8 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:laporpak_fp/core/constants/enums.dart';
+import 'package:laporpak_fp/core/models/app_notification.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
+import 'package:laporpak_fp/core/services/firestore/firestore_notification_repository.dart';
 import 'package:laporpak_fp/core/services/firestore/firestore_ticket_repository.dart';
+import 'package:laporpak_fp/core/services/notification_repository.dart';
+import 'package:laporpak_fp/core/services/notification_service.dart';
 import 'package:laporpak_fp/screens/supervisor/supervisor_ticket_detail_page.dart';
 import 'package:laporpak_fp/screens/supervisor/widgets/supervisor_ticket_card.dart';
 
@@ -26,11 +32,15 @@ class SupervisorHomePage extends StatefulWidget {
 class _SupervisorHomePageState extends State<SupervisorHomePage>
     with SingleTickerProviderStateMixin {
   _SortOption _sortOption = _SortOption.dateDesc;
-  TicketStatus? _filterStatus; // null = all
+  TicketStatus? _filterStatus;
   late TabController _tabController;
   final _repo = FirestoreTicketRepository();
+  final NotificationRepository _notifRepo = FirestoreNotificationRepository();
 
-  // Tabs map status filter
+  StreamSubscription<List<Ticket>>? _notifSub;
+  final Map<String, TicketStatus> _knownStatuses = {};
+  bool _notifInitialized = false;
+
   static const _tabs = <String, TicketStatus?>{
     'All': null,
     'Open': TicketStatus.open,
@@ -50,10 +60,55 @@ class _SupervisorHomePageState extends State<SupervisorHomePage>
         _filterStatus = _tabs.values.elementAt(_tabController.index);
       });
     });
+    _startNotificationListener();
+  }
+
+  void _startNotificationListener() {
+    _notifSub = _repo.watchByDepartment(widget.user.department).listen((tickets) {
+      if (!_notifInitialized) {
+        _notifInitialized = true;
+        for (final t in tickets) {
+          _knownStatuses[t.id] = t.status;
+        }
+        return;
+      }
+      for (final t in tickets) {
+        final prev = _knownStatuses[t.id];
+        if (t.status == TicketStatus.open && prev != TicketStatus.open) {
+          const title = 'New Hazard Report';
+          final body = '${t.workerName}: ${t.title}';
+          NotificationService.show(id: t.id.hashCode, title: title, body: body);
+          _notifRepo.add(AppNotification(
+            id: '',
+            recipientId: widget.user.uid,
+            title: title,
+            body: body,
+            ticketId: t.id,
+            isRead: false,
+            createdAt: DateTime.now(),
+          ));
+        } else if (t.status == TicketStatus.pendingValidation && prev != TicketStatus.pendingValidation) {
+          const title = 'Resolution Submitted';
+          final body = '${t.title} is ready for validation.';
+          NotificationService.show(id: t.id.hashCode, title: title, body: body);
+          _notifRepo.add(AppNotification(
+            id: '',
+            recipientId: widget.user.uid,
+            title: title,
+            body: body,
+            ticketId: t.id,
+            isRead: false,
+            createdAt: DateTime.now(),
+          ));
+        }
+        _knownStatuses[t.id] = t.status;
+      }
+    });
   }
 
   @override
   void dispose() {
+    _notifSub?.cancel();
     _tabController.dispose();
     super.dispose();
   }

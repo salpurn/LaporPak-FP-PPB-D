@@ -7,7 +7,6 @@ class AppUser {
   final String email;
   final UserRole role;
   final String department;
-  final String fcmToken;
 
   const AppUser({
     required this.uid,
@@ -16,7 +15,6 @@ class AppUser {
     required this.email,
     required this.role,
     required this.department,
-    required this.fcmToken,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
@@ -37,7 +35,6 @@ class AppUser {
       email: json['email'] as String? ?? '',
       role: role,
       department: json['department'] as String? ?? '',
-      fcmToken: json['fcmToken'] as String? ?? '',
     );
   }
 
@@ -49,7 +46,6 @@ class AppUser {
       'email': email,
       'role': role.name,
       'department': department,
-      'fcmToken': fcmToken,
     };
   }
 }

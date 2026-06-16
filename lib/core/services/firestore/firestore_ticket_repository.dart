@@ -7,6 +7,9 @@ import 'package:laporpak_fp/core/services/ticket_repository.dart';
 class FirestoreTicketRepository implements TicketRepository {
   final _col = FirebaseFirestore.instance.collection(Collections.tickets);
 
+  @override
+  String newId() => _col.doc().id;
+
   Ticket _fromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Ticket.fromJson({

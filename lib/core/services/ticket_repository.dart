@@ -1,6 +1,7 @@
 import '../models/ticket.dart';
 
 abstract class TicketRepository {
+  String newId();
   Future<void> createTicket(Ticket ticket);
   Future<void> updateTicket(Ticket ticket);
   Future<void> deleteTicket(String id);

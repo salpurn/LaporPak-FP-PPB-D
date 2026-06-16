@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:laporpak_fp/core/constants/collections.dart';
 import 'package:laporpak_fp/core/constants/enums.dart';
+import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
 import 'package:laporpak_fp/core/services/firestore/firestore_ticket_repository.dart';
+import 'package:laporpak_fp/core/services/firestore/firestore_user_repository.dart';
 import 'package:laporpak_fp/core/services/holiday_service.dart';
+import 'package:laporpak_fp/core/services/user_repository.dart';
 import 'package:laporpak_fp/widgets/holiday_calendar_dialog.dart';
 
 class SupervisorTicketDetailPage extends StatefulWidget {
@@ -142,6 +143,7 @@ class _SupervisorTicketDetailPageState extends State<SupervisorTicketDetailPage>
           ticket: widget.ticket,
           holidayService: _holidayService,
           ticketRepo: _ticketRepo,
+          userRepo: FirestoreUserRepository(),
           isReassign: isReassign,
           supervisorUid: widget.supervisorUid,
         );
@@ -475,6 +477,7 @@ class _AssignWorkerSheet extends StatefulWidget {
   final Ticket ticket;
   final HolidayService holidayService;
   final FirestoreTicketRepository ticketRepo;
+  final UserRepository userRepo;
   final bool isReassign;
   final String supervisorUid;
 
@@ -482,6 +485,7 @@ class _AssignWorkerSheet extends StatefulWidget {
     required this.ticket,
     required this.holidayService,
     required this.ticketRepo,
+    required this.userRepo,
     required this.isReassign,
     required this.supervisorUid,
   });
@@ -608,11 +612,8 @@ class _AssignWorkerSheetState extends State<_AssignWorkerSheet> {
 
           const Text('Select Maintenance Worker', style: TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection(Collections.users)
-                .where('role', isEqualTo: UserRole.maintenance.name)
-                .snapshots(),
+          StreamBuilder<List<AppUser>>(
+            stream: widget.userRepo.watchMaintenanceWorkers(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return const Text('Error loading workers');
@@ -620,8 +621,8 @@ class _AssignWorkerSheetState extends State<_AssignWorkerSheet> {
               if (!snapshot.hasData) {
                 return const CircularProgressIndicator();
               }
-              
-              final workers = snapshot.data!.docs;
+
+              final workers = snapshot.data!;
               if (workers.isEmpty) {
                 return const Text('No maintenance workers found.', style: TextStyle(color: Colors.red));
               }
@@ -633,13 +634,10 @@ class _AssignWorkerSheetState extends State<_AssignWorkerSheet> {
                 ),
                 hint: const Text('Choose a worker'),
                 initialValue: _selectedWorkerId,
-                items: workers.map((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final name = data['name'] ?? 'Unknown';
-                  final dept = data['department'] ?? 'Unknown';
+                items: workers.map((u) {
                   return DropdownMenuItem(
-                    value: doc.id,
-                    child: Text('$name ($dept)'),
+                    value: u.uid,
+                    child: Text('${u.name} (${u.department})'),
                   );
                 }).toList(),
                 onChanged: (val) {

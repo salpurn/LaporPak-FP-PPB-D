@@ -108,11 +108,6 @@ class AppEndDrawer extends StatelessWidget {
                 );
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: const Text('Settings'),
-              onTap: () {},
-            ),
             const Divider(),
             const Spacer(),
             ListTile(

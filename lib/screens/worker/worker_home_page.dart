@@ -1,24 +1,87 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:laporpak_fp/core/constants/enums.dart';
+import 'package:laporpak_fp/core/models/app_notification.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
+import 'package:laporpak_fp/core/services/firestore/firestore_notification_repository.dart';
+import 'package:laporpak_fp/core/services/notification_repository.dart';
+import 'package:laporpak_fp/core/services/notification_service.dart';
 import 'package:laporpak_fp/screens/maintenance/widgets/status_badge.dart';
 import 'package:laporpak_fp/screens/worker/worker_services.dart';
 import 'package:laporpak_fp/screens/worker/worker_ticket_detail_page.dart';
 import 'package:laporpak_fp/screens/worker/worker_ticket_form_page.dart';
 
-class WorkerHomePage extends StatelessWidget {
+class WorkerHomePage extends StatefulWidget {
   final AppUser user;
 
   const WorkerHomePage({super.key, required this.user});
 
   @override
+  State<WorkerHomePage> createState() => _WorkerHomePageState();
+}
+
+class _WorkerHomePageState extends State<WorkerHomePage> {
+  final _repo = WorkerServices.instance.repo;
+  final NotificationRepository _notifRepo = FirestoreNotificationRepository();
+
+  StreamSubscription<List<Ticket>>? _notifSub;
+  final Map<String, TicketStatus> _knownStatuses = {};
+  bool _notifInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startNotificationListener();
+  }
+
+  void _startNotificationListener() {
+    _notifSub = _repo.watchByWorker(widget.user.workerId).listen((tickets) {
+      if (!_notifInitialized) {
+        _notifInitialized = true;
+        for (final t in tickets) {
+          _knownStatuses[t.id] = t.status;
+        }
+        return;
+      }
+      for (final t in tickets) {
+        final prev = _knownStatuses[t.id];
+        final isResolved = t.status == TicketStatus.closed || t.status == TicketStatus.rejected;
+        if (isResolved && prev != t.status) {
+          final title = t.status == TicketStatus.closed ? 'Report Resolved' : 'Report Rejected';
+          final body = t.status == TicketStatus.closed
+              ? '${t.title} has been closed.'
+              : '${t.title} was rejected and needs rework.';
+          NotificationService.show(id: t.id.hashCode, title: title, body: body);
+          _notifRepo.add(AppNotification(
+            id: '',
+            recipientId: widget.user.uid,
+            title: title,
+            body: body,
+            ticketId: t.id,
+            isRead: false,
+            createdAt: DateTime.now(),
+          ));
+        }
+        _knownStatuses[t.id] = t.status;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifSub?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final repo = WorkerServices.instance.repo;
+    final repo = _repo;
 
     return Scaffold(
       body: StreamBuilder<List<Ticket>>(
-        stream: repo.watchByWorker(user.workerId),
+        stream: repo.watchByWorker(widget.user.workerId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -86,7 +149,7 @@ class WorkerHomePage extends StatelessWidget {
                 ticket: ticket,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => WorkerTicketDetailPage(ticket: ticket, user: user),
+                    builder: (_) => WorkerTicketDetailPage(ticket: ticket, user: widget.user),
                   ),
                 ),
               );
@@ -97,7 +160,7 @@ class WorkerHomePage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => WorkerTicketFormPage(user: user),
+            builder: (_) => WorkerTicketFormPage(user: widget.user),
           ),
         ),
         tooltip: 'Submit hazard report',

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
+import 'package:laporpak_fp/core/services/notification_service.dart';
 import 'package:laporpak_fp/core/widgets/app_shell.dart';
 import 'package:laporpak_fp/firebase_options.dart';
 import 'package:laporpak_fp/screens/auth_page.dart';
@@ -11,6 +12,7 @@ import 'package:laporpak_fp/services/auth_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await NotificationService.initialize();
   runApp(const MainApp());
 }
 

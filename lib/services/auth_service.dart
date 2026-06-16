@@ -24,17 +24,18 @@ class AuthService {
       email: email,
       password: password,
     );
+    final uid = credential.user?.uid;
+    if (uid == null) throw StateError('register() succeeded but user UID is null');
     await _firestore
         .collection(Collections.users)
-        .doc(credential.user!.uid)
+        .doc(uid)
         .set({
-      'uid': credential.user!.uid,
+      'uid': uid,
       'workerId': workerId,
       'name': name,
       'email': email,
       'role': role.name,
       'department': department,
-      'fcmToken': '',
     });
     return credential;
   }
@@ -82,7 +83,6 @@ class AuthService {
           'name': data['name'] ?? current.displayName ?? 'User',
           'email': data['email'] ?? current.email ?? '-',
           'department': data['department'] ?? '-',
-          'fcmToken': data['fcmToken'] ?? '-',
         });
       }
     }
@@ -98,7 +98,6 @@ class AuthService {
       email: current.email ?? '',
       role: UserRole.floorWorker,
       department: '',
-      fcmToken: '',
     );
   }
 }

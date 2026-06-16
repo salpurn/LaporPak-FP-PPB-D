@@ -1,15 +1,33 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:laporpak_fp/core/constants/enums.dart';
+import 'package:laporpak_fp/core/models/app_notification.dart';
 import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
+import 'package:laporpak_fp/core/services/firestore/firestore_notification_repository.dart';
+import 'package:laporpak_fp/core/services/notification_repository.dart';
+import 'package:laporpak_fp/core/services/notification_service.dart';
 import 'package:laporpak_fp/screens/maintenance/maintenance_services.dart';
 import 'package:laporpak_fp/screens/maintenance/ticket_detail_page.dart';
 import 'package:laporpak_fp/screens/maintenance/widgets/task_card.dart';
 
-class MaintenanceHomePage extends StatelessWidget {
+class MaintenanceHomePage extends StatefulWidget {
   final AppUser user;
 
   const MaintenanceHomePage({super.key, required this.user});
+
+  @override
+  State<MaintenanceHomePage> createState() => _MaintenanceHomePageState();
+}
+
+class _MaintenanceHomePageState extends State<MaintenanceHomePage> {
+  final _repo = MaintenanceServices.instance.repo;
+  final NotificationRepository _notifRepo = FirestoreNotificationRepository();
+
+  StreamSubscription<List<Ticket>>? _notifSub;
+  final Map<String, TicketStatus> _knownStatuses = {};
+  bool _notifInitialized = false;
 
   static const _activeStatuses = {
     TicketStatus.assigned,
@@ -17,11 +35,51 @@ class MaintenanceHomePage extends StatelessWidget {
   };
 
   @override
-  Widget build(BuildContext context) {
-    final repo = MaintenanceServices.instance.repo;
+  void initState() {
+    super.initState();
+    _startNotificationListener();
+  }
 
+  void _startNotificationListener() {
+    _notifSub = _repo.watchByAssignee(widget.user.uid).listen((tickets) {
+      if (!_notifInitialized) {
+        _notifInitialized = true;
+        for (final t in tickets) {
+          _knownStatuses[t.id] = t.status;
+        }
+        return;
+      }
+      for (final t in tickets) {
+        final prev = _knownStatuses[t.id];
+        if (t.status == TicketStatus.assigned && prev != TicketStatus.assigned) {
+          const title = 'New Task Assigned';
+          final body = 'You have been assigned: ${t.title}';
+          NotificationService.show(id: t.id.hashCode, title: title, body: body);
+          _notifRepo.add(AppNotification(
+            id: '',
+            recipientId: widget.user.uid,
+            title: title,
+            body: body,
+            ticketId: t.id,
+            isRead: false,
+            createdAt: DateTime.now(),
+          ));
+        }
+        _knownStatuses[t.id] = t.status;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return StreamBuilder<List<Ticket>>(
-      stream: repo.watchByAssignee(user.uid),
+      stream: _repo.watchByAssignee(widget.user.uid),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -87,7 +145,7 @@ class MaintenanceHomePage extends StatelessWidget {
               ticket: ticket,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => TicketDetailPage(ticket: ticket, user: user),
+                  builder: (_) => TicketDetailPage(ticket: ticket, user: widget.user),
                 ),
               ),
             );

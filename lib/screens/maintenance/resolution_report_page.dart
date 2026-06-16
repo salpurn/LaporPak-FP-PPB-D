@@ -5,7 +5,7 @@ import 'package:laporpak_fp/core/models/app_user.dart';
 import 'package:laporpak_fp/core/models/resolution_report.dart';
 import 'package:laporpak_fp/core/models/ticket.dart';
 import 'package:laporpak_fp/screens/maintenance/maintenance_services.dart';
-import 'package:laporpak_fp/screens/maintenance/ticket_copy_with.dart';
+import 'package:laporpak_fp/core/models/ticket_copy_with.dart';
 
 class ResolutionReportPage extends StatefulWidget {
   final Ticket ticket;
