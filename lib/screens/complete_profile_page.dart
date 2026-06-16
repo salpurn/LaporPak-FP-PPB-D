@@ -37,12 +37,6 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     super.dispose();
   }
 
-  Future<void> _signOutAndBack() async {
-    await _service.signOut();
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/login');
-  }
-
   Future<void> _save() async {
     final id = _idController.text.trim();
     final name = _nameController.text.trim();
@@ -94,7 +88,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
         title: const Text('Lengkapi Profil'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: _signOutAndBack,
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: SingleChildScrollView(

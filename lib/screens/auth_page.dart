@@ -72,11 +72,11 @@ class _AuthPageState extends State<AuthPage> {
 
       if (!mounted) return;
 
-      final currentUser = await _service.fetchCurrentUser();
+      final currentUser = await _service.currentUser();
 
       if (!mounted) return;
 
-      final routeName = _routeForRole(currentUser?.role);
+      final routeName = _routeForRole(currentUser.role);
       if (routeName == null) {
         setState(() {
           _error = 'Role user tidak dikenali atau data profile belum lengkap.';
